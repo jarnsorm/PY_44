@@ -177,7 +177,7 @@ def insert_table():
             address='г. Курск, Вернадского, 15/6'
         )
 
-        conn.flush()
+
         conn.add_all([prov1, prov2, prov3, prov4, prov5])
 
         dlvr1 = Deliveries(
