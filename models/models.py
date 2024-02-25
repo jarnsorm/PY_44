@@ -62,7 +62,7 @@ class Deliveries(Base):
     __tablename__ = 'deliveries'
 
     id: Mapped[intpk]
-    provider_id = mapped_column(ForeignKey('providers.id'))
+    provider_id = mapped_column(ForeignKey('providers.id', ondelete='cascade'))
     date: Mapped[datetime.date]
 
     product = relationship('Products', backref='deliveries')
@@ -72,7 +72,7 @@ class Products(Base):
     __tablename__ = 'products'
 
     id: Mapped[intpk]
-    supply_id = mapped_column(ForeignKey('deliveries.id'))
+    supply_id = mapped_column(ForeignKey('deliveries.id', ondelete='cascade'))
     product_name: Mapped[str]
     specifications: Mapped[str]
     description: Mapped[str | None]
@@ -90,7 +90,7 @@ class Orders(Base):
 
     id: Mapped[intpk]
     worker_id = mapped_column(ForeignKey('employees.id'))
-    product_id = mapped_column(ForeignKey('products.id'))
+    product_id = mapped_column(ForeignKey('products.id', ondelete='cascade'))
     order_placement_date: Mapped[datetime.date]
     order_execution_date: Mapped[datetime.date]
     client_id = mapped_column(ForeignKey('clients.id'))

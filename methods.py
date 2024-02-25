@@ -373,3 +373,12 @@ def all_from_model_select(Model):
         result = conn.execute(query).all()
         for row in result:
             print(*row[1:])
+
+
+def del_and_print(outsiders: list):
+    with connection() as conn:
+        for one in outsiders:
+            conn.query(Providers).filter(Providers.id == one).delete()
+        conn.commit()
+
+    all_from_model_select(Providers)
