@@ -368,6 +368,7 @@ def traders_select():
 
 
 def all_from_model_select(Model):
+    """Выводит все строки в указанной таблице"""
     with connection() as conn:
         query = select('*').select_from(Model)
         result = conn.execute(query).all()
@@ -376,6 +377,7 @@ def all_from_model_select(Model):
 
 
 def del_and_print(outsiders: list):
+    """Получает список id, удаляет строки с этими значениями из таблицы Providers и выводит оставшиеся строки"""
     with connection() as conn:
         for one in outsiders:
             conn.query(Providers).filter(Providers.id == one).delete()
