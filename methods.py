@@ -1,13 +1,18 @@
+from datetime import date
+
+from sqlalchemy import select, desc
 from data import connection, engine
-from models.models import Base, Employees, Clients, Providers, Deliveries, Products, Orders
+from models.models import Base, Employees, Clients, Providers, Deliveries, Products, Orders, ph_n
 
 
 def create_table():
+    """Создает таблицы заново (сначала удаляет)"""
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
 
 
 def insert_table():
+    """Заполняет таблицы мясом"""
     with connection() as conn:
         empl1 = Employees(
             last_name='Петрушкин',
@@ -177,7 +182,6 @@ def insert_table():
             address='г. Курск, Вернадского, 15/6'
         )
 
-
         conn.add_all([prov1, prov2, prov3, prov4, prov5])
 
         dlvr1 = Deliveries(
@@ -311,3 +315,61 @@ def insert_table():
 
         conn.add_all([ordr1, ordr2, ordr3, ordr4, ordr5])
         conn.commit()
+
+
+def update_clients_table(client_id: int, new_phone_number: ph_n = None, new_address: str = None):
+    """Обновляет данные клиента"""
+    with connection() as con:
+        updt_client = con.get(Clients, client_id)
+        if new_phone_number is not None:
+            print(f'(Клиент) {updt_client.full_name} '
+                  f'сменил(а) текущий номер телефона:\n{updt_client.phone_number} --> {new_phone_number}\n')
+            updt_client.phone_number = new_phone_number
+        if isinstance(new_address, str):
+            print(f'(Клиент) {updt_client.full_name} '
+                  f'сменил(а) текущий адрес:\n{updt_client.address} --> {new_address}\n')
+            updt_client.address = new_address
+        con.commit()
+
+
+def employees_dob_select():
+    """Выводит данные сотрудников младше 1998г.р."""
+    with connection() as conn:
+        query = (select(Employees.first_name, Employees.last_name, Employees.DOB)
+                 .select_from(Employees)
+                 .where(Employees.DOB > date(1999, 0o1, 0o1))
+                 .order_by(Employees.DOB))
+        res = conn.execute(query)
+
+        for row in res:
+            f_name = row.first_name
+            l_name = row.last_name
+            dob = row.DOB
+            print(f_name, l_name, dob)
+
+
+def traders_select():
+    """Выводит все продажи: Товар + Дата заказа + Консультант + маржа"""
+    with connection() as conn:
+        query = (
+            select(Products.product_name, Orders.order_placement_date, Employees.last_name,
+                   (Products.retail_price - Products.purchase_price).label('mar'))
+            .select_from(Products)
+            .join(Orders)
+            .join(Employees)
+            .order_by(desc('mar'))
+        )
+
+        result = conn.execute(query)
+        res = result.all()
+        print('Итоги продаж:', result)
+        for row in res:
+            print(f'Товар: {row[0]}, Дата заказа: {row[1]}, Консультант: {row[2]}, Прибыль: {row[3]}')
+
+
+def all_from_model_select(Model):
+    with connection() as conn:
+        query = select('*').select_from(Model)
+        result = conn.execute(query).all()
+        for row in result:
+            print(*row[1:])
